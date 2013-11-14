@@ -51,6 +51,127 @@ define(['require', 'module', 'jquery', 'underscore', 'backbone', 'readerView', '
                             clickEvent.stopPropagation();
                         }
                     });
+                    
+                    //ASL Trigger Code
+                    $(document).ready(function() {
+                        $('body').append('<div id="lightbox" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);text-align:center;z-index:9999"></div>');
+
+                        $("body").dblclick(function() {
+                            // Gets clicked on word (or selected text if text is selected)
+                            var t = '';
+                            var s = window.getSelection();
+                            if (s) {
+                                if (s.isCollapsed) { //nothing is selected. Only clicked.
+                                    s.modify('move', 'forward', 'character');
+                                    s.modify('move', 'backward', 'word');
+                                    s.modify('extend', 'forward', 'word');
+                                   
+                                    t = s.toString();
+                                    t = t.replace(/'s/g,"");
+                                    t = t.replace(/'d/g,"");
+                                    t = t.replace(/~/g," ");
+                                    t = t.replace(/_/g," ");
+                                    t = t.replace(".", "");
+                                    t = t.replace(",","");
+                                    
+                                    s.modify('move', 'forward', 'character'); //clear selection
+                                }
+                            }
+
+                            //xmlhttprequest call to database, input = t, fails in function, and won't return data
+                            //however, data is visible, and succeeded in the GET command when viewed
+                            //from within browser's network tab of console
+
+                            if ( t !== "" ) {
+                                var idArray;
+
+                                GM_xmlhttpRequest({
+                                    method: "GET",
+                                    url: "http://smartsign.imtc.gatech.edu/videos?keywords=" + t,
+                                    onload: function(response) {
+                                        var data = $.parseJSON(response.responseText);
+
+                                        idArray= new Array(data.length);
+
+                                        for ( var i = 0; i < data.length; i++ ) {
+                                            idArray[i] = '<iframe width="420" height="345" align:right src="http://www.youtube.com/embed/' + data[i]['id'] + '?rel=0"> </iframe>';
+                                        }
+                                        
+                                        var htmlString = '<div style="width:100%;position=absolute;text-align:right"> <div style="position:relative;left:72%;width:420px;text-align:left;">';
+
+                                        for(var j=0; j<idArray.length; j++) {
+                                            htmlString += idArray[j];
+                                        }
+
+                                        $('#lightbox')
+                                            .html(htmlString + '</div></div>')
+                                            .css({"line-height":($(window).height()*0)+"px", "overflow":"auto", "display":"block"})
+                                            .fadeIn('fast')
+                                            .live('click', function() {
+                                                $(this).fadeOut('fast');
+                                        });
+                                    }
+                                });
+                            }
+                        });
+
+                        $("body").click(function() {
+                            // Gets clicked on word (or selected text if text is selected)
+                            var t = '';
+                            var s = window.getSelection();
+                            if (s) {
+                                if (s.isCollapsed) {//nothing is selected. Only clicked.
+                                } else {
+                                    t = s.toString();
+
+                                    t = t.trim();
+                                    t = t.replace(/'s/g,"");
+                                    t = t.replace(/'d/g,"");
+                                    t = t.replace(/~/g," ");
+                                    t = t.replace(/_/g," ");
+                                    t = t.replace(".", "");
+                                    t = t.replace(",","");
+                                }
+                            }
+
+                            //xmlhttprequest call to database, input = t, fails in function, and won't return data
+                            //however, data is visible, and succeeded in the GET command when viewed
+                            //from within browser's network tab of console
+
+                            if ( t !== "" ) {
+                                var idArray;
+
+                                GM_xmlhttpRequest({
+                                    method: "GET",
+                                    url: "http://smartsign.imtc.gatech.edu/videos?keywords=" + t,
+                                    onload: function(response) {
+                                        var data = $.parseJSON(response.responseText);
+
+                                        idArray= new Array(data.length);
+
+                                        for ( var i = 0; i < data.length; i++ ) {
+                                            idArray[i] = '<iframe width="420" height="345" align:right src="http://www.youtube.com/embed/' + data[i]['id'] + '?rel=0"> </iframe>';
+                                        }
+                                        
+                                        var htmlString = '<div style="width:100%;position=absolute;text-align:right"> <div style="position:relative;left:72%;width:420px;text-align:left;">';
+
+                                        for(var j=0; j<idArray.length; j++) {
+                                            htmlString += idArray[j];
+                                        }
+
+                                        $('#lightbox')
+                                            .html(htmlString + '</div></div>')
+                                            .css({"line-height":($(window).height()*0)+"px", "overflow":"auto", "display":"block"})
+                                            .fadeIn('fast')
+                                            .live('click', function() {
+                                                $(this).fadeOut('fast');
+                                        });
+                                    }
+                                });
+                            }
+                        });
+                    });
+
                     origCallback.call(this, success);
                 }
                 if (epubFetch.isPackageExploded()) {
